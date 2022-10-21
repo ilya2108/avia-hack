@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  
+  rabbitmq:
+    image: 'rabbitmq:3.6-management-alpine'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+
+  worker:
+    build: scripts/worker
+    volumes:
+      - ./worker:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  server:
+    build: scripts/server
+    volumes:
+      - ./server:/app
+    ports:
+      - 8090:8090
