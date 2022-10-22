@@ -51,8 +51,8 @@ class RESTApp:
         rmq_task = {'key': task['key'], 'in_file': in_file}
         try:
             self._rmq_pub(json.dumps(rmq_task))
-        except (pe.ConnectionClosed, pe.AMQPConnectionError): 
-            return {'status': 'error', 'message': 'RMQ connection error'}
+        except (pe.ConnectionClosed, pe.AMQPConnectionError, pe.ChannelWrongStateError) as e: 
+            return {'status': 'error', 'message': 'RMQ connection error %s' % e}
         else:
             return {'key': task['key'], 'status': task['status']}
 
