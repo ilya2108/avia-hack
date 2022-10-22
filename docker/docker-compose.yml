@@ -8,16 +8,22 @@ services:
       - '5672:5672'
       - '15672:15672'
 
-  worker:
-    build: scripts/worker
-    volumes:
-      - ./worker:/app
-    environment:
-      - PYTHONUNBUFFERED=1
-
   server:
     build: scripts/server
     volumes:
-      - ./server:/app
+      - ../scripts/server:/scripts
     ports:
       - 8090:8090
+    depends_on:
+      - rabbitmq
+      
+  worker:
+    build: scripts/worker
+    volumes:
+      - ../scripts/worker:/scripts
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - server
+
+  

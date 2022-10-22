@@ -13,7 +13,7 @@ def index():
 
 @app.route('/add-job/<cmd>')
 def add(cmd):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='0.0.0.0', port=5672))
     channel = connection.channel()
     channel.queue_declare(queue='task_queue', durable=True)
     channel.basic_publish(
