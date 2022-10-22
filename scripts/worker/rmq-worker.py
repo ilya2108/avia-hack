@@ -2,35 +2,42 @@
 
 import pika
 import time
+import logging
+import os
+logging.basicConfig(level=logging.INFO)
 
-sleepTime = 10
-print(' [*] Sleeping for ', sleepTime, ' seconds.')
-time.sleep(30)
+class RMQHandler:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
 
-print(' [*] Connecting to server ...')
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
-channel = connection.channel()
-channel.queue_declare(queue='task_queue', durable=True)
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
+        self.channel = self.connection.channel()
 
-print(' [*] Waiting for messages.')
+        self.channel.queue_declare(queue='task_queue', durable=True)
+        self.channel.basic_qos(prefetch_count=1)
+        self.channel.basic_consume(queue='task_queue', on_message_callback=self.callback)
+    
+    def start(self):
+        logging.info(" [*] Waiting for messages. To exit press CTRL+C")
+        self.channel.start_consuming()
 
+    def callback(self, ch, method, properties, body):
+        logging.info(" [x] Received %r" % body)
+        cmd = body.decode()
 
-def callback(ch, method, properties, body):
-    print(" [x] Received %s" % body)
-    cmd = body.decode()
+        if cmd == 'hey':
+            print("hey there")
+        elif cmd == 'hello':
+            print("well hello there")
+        else:
+            print("sorry i did not understand ", body)
 
-    if cmd == 'hey':
-        print("hey there")
-    elif cmd == 'hello':
-        print("well hello there")
-    else:
-        print("sorry i did not understand ", body)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    print(" [x] Done")
-
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-
-
-channel.basic_qos(prefetch_count=1)
-channel.basic_consume(queue='task_queue', on_message_callback=callback)
-channel.start_consuming()
+if __name__ == "__main__":
+    node = RMQHandler("0.0.0.0", 5672)
+    sleepTime = 10
+    logging.info("Sleeping for %d seconds" % sleepTime)
+    # time.sleep(sleepTime)
+    node.start()
