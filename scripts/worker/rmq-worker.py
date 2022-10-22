@@ -37,7 +37,4 @@ class RMQHandler:
 
 if __name__ == "__main__":
     node = RMQHandler("0.0.0.0", 5672)
-    sleepTime = 10
-    logging.info("Sleeping for %d seconds" % sleepTime)
-    # time.sleep(sleepTime)
     node.start()
