@@ -2,6 +2,20 @@ version: '3'
 
 services:
   
+  database:
+    image: 'mongo'
+    container_name: 'database'
+    restart: always
+    ports:
+      - '27017-27019:27017-27019'
+    volumes:
+      - './init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js'
+      - './mongo-volume:/data/db'
+    environment:
+      - MONGO_INITDB_DATABASE=collabse-db
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=toor
+
   rabbitmq:
     image: 'rabbitmq:3.6-management-alpine'
     ports:
