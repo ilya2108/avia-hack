@@ -16,11 +16,20 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=toor
 
-  rabbitmq:
+  broker:
     image: 'rabbitmq:3.6-management-alpine'
     ports:
       - '5672:5672'
       - '15672:15672'
+      
+  db_handler:
+    build: scripts/db_handler
+    volumes:
+      - ../scripts/db_handelr:/scripts
+    ports:
+      - 8070:8070
+    depends_on:
+      - database
 
   server:
     build: scripts/server
@@ -29,7 +38,8 @@ services:
     ports:
       - 8090:8090
     depends_on:
-      - rabbitmq
+      - broker
+      - db_handler
       
   worker:
     build: scripts/worker
@@ -39,5 +49,6 @@ services:
       - PYTHONUNBUFFERED=1
     depends_on:
       - server
+      - db_handler
 
   

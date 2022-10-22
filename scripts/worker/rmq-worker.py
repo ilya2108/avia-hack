@@ -1,40 +1,63 @@
 #! /usr/bin/env python3
 
+import json
 import pika
 import time
 import logging
 import os
+from collections import namedtuple
+import requests as req
+
 logging.basicConfig(level=logging.INFO)
 
+ResponseRMQ = namedtuple('ResponseRMQ', ['key', 'in_file'])
+RequestDB = namedtuple('RequestDB', ['key', 'status', 'out_file'])
+
 class RMQHandler:
-    def __init__(self, host, port):
+    def __init__(self, host, port, dbHost, dbPort, data_handler):
         self.host = host
         self.port = port
-
+        self.dbHost = dbHost
+        self.dbPort = dbPort
+        self.data_handler = data_handler
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
         self.channel = self.connection.channel()
 
         self.channel.queue_declare(queue='task_queue', durable=True)
         self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(queue='task_queue', on_message_callback=self.callback)
+        self.channel.basic_consume(queue='task_queue', on_message_callback=self.callback, auto_ack=True)
     
     def start(self):
         logging.info(" [*] Waiting for messages. To exit press CTRL+C")
         self.channel.start_consuming()
 
     def callback(self, ch, method, properties, body):
-        logging.info(" [x] Received %r" % body)
-        cmd = body.decode()
+        cmd = body.decode("utf-8")
+        try:
+            logging.info(" [x] Received %r" % cmd)
+            cmd_dict = json.loads(cmd)
+            response = ResponseRMQ(**cmd_dict)
 
-        if cmd == 'hey':
-            print("hey there")
-        elif cmd == 'hello':
-            print("well hello there")
+        except json.decoder.JSONDecodeError as e:
+            logging.error("Invalid JSON received from RMQ: %s" % cmd)
+            return
+        except TypeError:
+            logging.error("Error occured while getting data from JSON")
+            return
         else:
-            print("sorry i did not understand ", body)
+            output = self.data_handler(response.in_file)
+            request = RequestDB(key=response.key, status="done", out_file=output)
+            d = request._asdict()
+            post = {"params": {key: d[key] for key in d.keys()
+                        & {'key', 'status'}}, "data": d['out_file']}
+            r = req.post("http://{}:{}/update-task".format(self.dbHost, self.dbPort), **post)
+            logging.info(" [x] Done")
 
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+def data_handler(data):
+    logging.info(" [x] Received %r" % data)
+    time.sleep(10)
+    return data + "output"
 
 if __name__ == "__main__":
-    node = RMQHandler("0.0.0.0", 5672)
+    node = RMQHandler("0.0.0.0", 5672, "0.0.0.0", 8070, data_handler)
     node.start()

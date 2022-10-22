@@ -1,22 +1,25 @@
 #! /usr/bin/env python3
 
-from tkinter import W
-from flask import Flask, send_from_directory, request
+from flask import Flask, request
+import requests as req
 import pika
+from pika import exceptions as pe
 import logging
 import os
 from pathlib import Path
-
+import json
 logging.basicConfig(level=logging.INFO)
 ROOT = Path(os.path.abspath(__file__)).parent
 WEBPAGE = ROOT/Path("webpage")
 
 class RESTApp:
-    def __init__(self, host, port, rmqHost, rmqPort):
+    def __init__(self, host, port, rmqHost, rmqPort, dbHost, dbPort):
         self.host = host
         self.port = port
         self.rmqHost = rmqHost
         self.rmqPort = rmqPort
+        self.dbHost = dbHost
+        self.dbPort = dbPort
 
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rmqHost, port=self.rmqPort))
         self.channel = self.connection.channel()
@@ -30,7 +33,7 @@ class RESTApp:
 
     def _configure_requests(self):
         self.app.add_url_rule('/', view_func=self.index, methods=['GET'])
-        self.app.add_url_rule('/add-job/<cmd>', view_func=self.add, methods=['GET', 'POST'])
+        self.app.add_url_rule('/add-job', view_func=self.add, methods=['GET', 'POST'])
         self.app.add_url_rule("/client.js", view_func=self.javascript, methods=['GET'])
 
     def index(self):
@@ -41,16 +44,27 @@ class RESTApp:
         content = open(WEBPAGE/Path("client.js"), "r").read()
         return content
 
-    def add(self, cmd):
+    def add(self):
+        r = req.put("http://{}:{}/add-task".format(self.dbHost, self.dbPort), params={'name': "mock"})
+        task = r.json()
+        in_file = request.data.decode("utf-8")
+        rmq_task = {'key': task['key'], 'in_file': in_file}
+        try:
+            self._rmq_pub(json.dumps(rmq_task))
+        except (pe.ConnectionClosed, pe.AMQPConnectionError): 
+            return {'status': 'error', 'message': 'RMQ connection error'}
+        else:
+            return {'key': task['key'], 'status': task['status']}
+
+    def _rmq_pub(self, cmd):
         self.channel.basic_publish(
             exchange='',
             routing_key='task_queue',
-            body=cmd,
+            body=str(cmd),
             properties=pika.BasicProperties(
                 delivery_mode=2,  # make message persistent
             ))
-        return " [x] Sent: %s" % cmd
 
 if __name__ == '__main__':
-    app = RESTApp("0.0.0.0", 8090, "0.0.0.0", 5672)
+    app = RESTApp("0.0.0.0", 8090, "0.0.0.0", 5672, "0.0.0.0", 8070)
     app.run()
