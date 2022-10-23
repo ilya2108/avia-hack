@@ -44,7 +44,7 @@ services:
   worker:
     build: backend/worker
     volumes:
-      - ../scripts/worker:/scripts
+      - ../backend/worker:/scripts
     environment:
       - PYTHONUNBUFFERED=1
     depends_on:
