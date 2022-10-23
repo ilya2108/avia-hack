@@ -54,13 +54,18 @@ class RMQHandler:
 
 def data_handler(data):
     logging.info("[x] Received data")
-    print(data)
     try:
-        data = str(model.plan_to_zagr(data))
+        ret = {}
+        model_out = model.plan_to_zagr(data)
+        print(model_out)
+        for key, value in enumerate(model_out):
+            value.reset_index(inplace=True)
+            ret[str(key)] = value.to_json()
+        model_out = json.dumps(ret)
     except Exception as e:
-        logging.error("Error occured while processing data")
+        logging.error("Error occured while processing data: %s" % e)
         return "Error occured while processing data"
-    return data + "output"
+    return model_out
 
 if __name__ == "__main__":
     node = RMQHandler(appPort=5672, dbhPort=8070, data_handler=data_handler)
