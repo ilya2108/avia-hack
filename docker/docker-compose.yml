@@ -11,6 +11,8 @@ services:
     volumes:
       - './init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js'
       - './mongo-volume:/data/db'
+    networks:
+      - backend
     environment:
       - MONGO_INITDB_DATABASE=collabse-db
       - MONGO_INITDB_ROOT_USERNAME=root
@@ -18,6 +20,8 @@ services:
 
   broker:
     image: 'rabbitmq:3.6-management-alpine'
+    networks:
+      - backend
     ports:
       - '5672:5672'
       - '15672:15672'
@@ -25,11 +29,15 @@ services:
   db_handler:
     build: ../backend/db_handler
     volumes:
-      - ../backend/db_handler:/scripts
+      - ../backend/db_handelr:/scripts
     ports:
       - 8070:8070
+    networks:
+      - backend
+    restart: always
     depends_on:
       - database
+      - broker
 
   server:
     build: ../backend/server
@@ -37,6 +45,9 @@ services:
       - ../backend/server:/scripts
     ports:
       - 8090:8090
+    networks:
+      - backend
+    restart: always
     depends_on:
       - broker
       - db_handler
@@ -47,8 +58,16 @@ services:
       - ../backend/worker:/scripts
     environment:
       - PYTHONUNBUFFERED=1
+    networks:
+      - backend
+    restart: always
     depends_on:
       - server
       - db_handler
+      - broker
+
+networks:
+  backend:
+    driver: bridge
 
   
