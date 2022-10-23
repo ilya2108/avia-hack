@@ -23,7 +23,7 @@ services:
       - '15672:15672'
       
   db_handler:
-    build: backend/db_handler
+    build: ../backend/db_handler
     volumes:
       - ../backend/db_handelr:/scripts
     ports:
@@ -32,7 +32,7 @@ services:
       - database
 
   server:
-    build: backend/server
+    build: ../backend/server
     volumes:
       - ../backend/server:/scripts
     ports:
@@ -42,7 +42,7 @@ services:
       - db_handler
       
   worker:
-    build: backend/worker
+    build: ../backend/worker
     volumes:
       - ../backend/worker:/scripts
     environment:
