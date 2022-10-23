@@ -59,7 +59,7 @@ def data_handler(data):
         data = str(model.plan_to_zagr(data))
     except Exception as e:
         logging.error("Error occured while processing data")
-        return None
+        return "Error occured while processing data"
     return data + "output"
 
 if __name__ == "__main__":
