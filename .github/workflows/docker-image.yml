@@ -15,4 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker-compose -f docker/docker-compose.ymlm up -d && bash tests.sh
+      run: docker-compose -f docker/docker-compose.yml up -d && bash tests.sh
