@@ -68,6 +68,18 @@ services:
       - db_handler
       - broker
 
+  frontend:
+    build: ../frontend
+    volumes:
+      - ../web:/web
+    ports:
+      - 8080:8080
+    networks:
+      - backend
+    restart: always
+    depends_on:
+      - server
+
 networks:
   backend:
     driver: bridge
