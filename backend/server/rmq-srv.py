@@ -40,8 +40,7 @@ class RESTApp:
         # self.app.add_url_rule("/client.js", view_func=self.javascript, methods=['GET'])
 
     def index(self):
-        content = open(WEBPAGE/Path("index.html"), "r").read()
-        return content
+        return "Server is running"
     
     # def javascript(self):
     #     content = open(WEBPAGE/Path("client.js"), "r").read()
