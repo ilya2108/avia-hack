@@ -37,15 +37,15 @@ class RESTApp:
         self.app.add_url_rule('/', view_func=self.index, methods=['GET'])
         self.app.add_url_rule('/api/tasks/send', view_func=self.add, methods=['POST'])
         self.app.add_url_rule('/api/tasks/lookup', view_func=self.check_task, methods=['GET'])
-        self.app.add_url_rule("/client.js", view_func=self.javascript, methods=['GET'])
+        # self.app.add_url_rule("/client.js", view_func=self.javascript, methods=['GET'])
 
     def index(self):
         content = open(WEBPAGE/Path("index.html"), "r").read()
         return content
     
-    def javascript(self):
-        content = open(WEBPAGE/Path("client.js"), "r").read()
-        return content
+    # def javascript(self):
+    #     content = open(WEBPAGE/Path("client.js"), "r").read()
+    #     return content
 
     def add(self):
         try:
