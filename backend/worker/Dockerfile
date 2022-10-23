@@ -24,5 +24,6 @@ RUN apt update && apt install -y    apt-utils \
 RUN pip3 install flask pika pymongo requests
 RUN pip3 install pandas pickle5 statistics numpy keras sklearn matplotlib seaborn scipy scikit-learn
 RUN pip3 install tensorflow
+RUN pip install prophet
 ENTRYPOINT python3 /scripts/rmq-worker.py
 # RUN python3 /scripts/worker/rmq-worker.py

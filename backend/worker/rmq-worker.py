@@ -33,7 +33,7 @@ class RMQHandler:
     def callback(self, ch, method, properties, body):
         cmd = body.decode("utf-8")
         try:
-            logging.info(" [x] Received %r" % cmd)
+            # logging.info(" [x] Received %r" % cmd)
             cmd_dict = json.loads(cmd)
             response = ResponseRMQ(**cmd_dict)
 
@@ -53,11 +53,15 @@ class RMQHandler:
             logging.info(" [x] Done")
 
 def data_handler(data):
-    logging.info("[x] Received %r" % data)
-    time.sleep(10)
+    logging.info("[x] Received data")
+    print(data)
+    try:
+        data = str(model.plan_to_zagr(data))
+    except Exception as e:
+        logging.error("Error occured while processing data")
+        return None
     return data + "output"
 
 if __name__ == "__main__":
-    model.open_weights()
-    # node = RMQHandler(appPort=5672, dbhPort=8070, data_handler=data_handler)
-    # node.start()
+    node = RMQHandler(appPort=5672, dbhPort=8070, data_handler=data_handler)
+    node.start()
