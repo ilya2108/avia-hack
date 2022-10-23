@@ -59,5 +59,5 @@ def data_handler(data):
 
 if __name__ == "__main__":
     model.open_weights()
-    node = RMQHandler(appPort=5672, dbhPort=8070, data_handler=data_handler)
-    node.start()
+    # node = RMQHandler(appPort=5672, dbhPort=8070, data_handler=data_handler)
+    # node.start()
