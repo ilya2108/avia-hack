@@ -29,7 +29,7 @@ services:
   db_handler:
     build: ../backend/db_handler
     volumes:
-      - ../backend/db_handelr:/scripts
+      - ../backend/db_handler:/scripts
     ports:
       - 8070:8070
     networks:

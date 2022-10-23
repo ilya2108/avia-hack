@@ -18,9 +18,9 @@ class RESTApp:
     def __init__(self, appPort, rmqPort, dbhPort):
         self.host = "0.0.0.0"
         self.port = appPort
-        self.rmqHost = "0.0.0.0"
+        self.rmqHost = "broker"
         self.rmqPort = rmqPort
-        self.dbHost = "0.0.0.0"
+        self.dbHost = "db_handler"
         self.dbhPort = dbhPort
 
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rmqHost, port=self.rmqPort))

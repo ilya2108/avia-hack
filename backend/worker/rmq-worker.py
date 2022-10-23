@@ -14,9 +14,9 @@ RequestDB = namedtuple('RequestDB', ['key', 'status', 'out_file'])
 
 class RMQHandler:
     def __init__(self, appPort, dbhPort, data_handler):
-        self.host = "0.0.0.0"
+        self.host = "broker"
         self.appPort = appPort
-        self.dbHost = "0.0.0.0"
+        self.dbHost = "db_handler"
         self.dbhPort = dbhPort
         self.data_handler = data_handler
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.appPort))

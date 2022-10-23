@@ -61,5 +61,5 @@ class DBApp:
         return "OK"
 
 if __name__ == '__main__':
-    app = DBApp(appPort=8070, mdbAddr="mongodb://admin:admin@127.0.0.1:27017/collabse-db")
+    app = DBApp(appPort=8070, mdbAddr="mongodb://admin:admin@database:27017/collabse-db")
     app.run()
