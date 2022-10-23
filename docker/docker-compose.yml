@@ -25,7 +25,7 @@ services:
   db_handler:
     build: backend/db_handler
     volumes:
-      - ../scripts/db_handelr:/scripts
+      - ../backend/db_handelr:/scripts
     ports:
       - 8070:8070
     depends_on:
@@ -34,7 +34,7 @@ services:
   server:
     build: backend/server
     volumes:
-      - ../scripts/server:/scripts
+      - ../backend/server:/scripts
     ports:
       - 8090:8090
     depends_on:
