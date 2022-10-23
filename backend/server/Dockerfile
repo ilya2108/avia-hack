@@ -20,7 +20,7 @@ RUN apt update && apt install -y    apt-utils \
                                     psmisc \
                                     python3-pip \
                                     python3-dev
-RUN pip3 install flask pika
+RUN pip3 install flask pika pymongo requests
 
 ENTRYPOINT python3 /scripts/rmq-srv.py
 # RUN python3 /scripts/server/rmq-srv.py

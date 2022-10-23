@@ -21,7 +21,7 @@ RUN apt update && apt install -y    apt-utils \
                                     python3-pip \
                                     python3-dev
 
-RUN pip3 install flask pika
+RUN pip3 install flask pika pymongo requests
 
 ENTRYPOINT python3 /scripts/rmq-worker.py
 # RUN python3 /scripts/worker/rmq-worker.py
