@@ -11,9 +11,9 @@ from time import time
 logging.basicConfig(level=logging.INFO)
 
 class DBApp:
-    def __init__(self, host, port, mdbAddr):
-        self.host = host
-        self.port = port
+    def __init__(self, appPort, mdbAddr):
+        self.host = "0.0.0.0"
+        self.port = appPort
         self.mdbAddr = mdbAddr
         mongo = MongoClient(self.mdbAddr)
         self.db = mongo['collabse-db']
@@ -25,9 +25,9 @@ class DBApp:
 
     def _configure_requests(self):
         self.app.add_url_rule('/', view_func=self.index, methods=['GET'])
-        self.app.add_url_rule('/add-task', view_func=self.add_task, methods=['PUT'])
-        self.app.add_url_rule('/get-task', view_func=self.get_task, methods=['GET'])
-        self.app.add_url_rule('/update-task', view_func=self.update_task, methods=['POST'])
+        self.app.add_url_rule('/api/tasks/append', view_func=self.add_task, methods=['PUT'])
+        self.app.add_url_rule('/api/tasks/lookup', view_func=self.get_task, methods=['GET'])
+        self.app.add_url_rule('/api/tasks/update', view_func=self.update_task, methods=['POST'])
         # self.app.add_url_rule('/add-job/<cmd>', view_func=self.add, methods=['GET', 'POST'])
         # self.app.add_url_rule("/client.js", view_func=self.javascript, methods=['GET'])
 
@@ -53,11 +53,13 @@ class DBApp:
     def get_task(self):
         key = request.args.get('key')
         task = self.db['tasks'].find_one({'key': key})
+        if task is None:
+            return {'status': 'not found', 'out_file': '', 'key': key, 'name': ''}
         return {'name': task['name'], 'key': task['key'], 'status': task['status'], 'out_file': task['out_file']}
 
     def index(self):
         return "OK"
 
 if __name__ == '__main__':
-    app = DBApp("0.0.0.0", 8070, "mongodb://admin:admin@127.0.0.1:27017/collabse-db")
+    app = DBApp(appPort=8070, mdbAddr="mongodb://admin:admin@127.0.0.1:27017/collabse-db")
     app.run()

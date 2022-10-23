@@ -4,7 +4,6 @@ import json
 import pika
 import time
 import logging
-import os
 from collections import namedtuple
 import requests as req
 
@@ -14,13 +13,13 @@ ResponseRMQ = namedtuple('ResponseRMQ', ['key', 'in_file'])
 RequestDB = namedtuple('RequestDB', ['key', 'status', 'out_file'])
 
 class RMQHandler:
-    def __init__(self, host, port, dbHost, dbPort, data_handler):
-        self.host = host
-        self.port = port
-        self.dbHost = dbHost
-        self.dbPort = dbPort
+    def __init__(self, appPort, dbhPort, data_handler):
+        self.host = "0.0.0.0"
+        self.appPort = appPort
+        self.dbHost = "0.0.0.0"
+        self.dbhPort = dbhPort
         self.data_handler = data_handler
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.appPort))
         self.channel = self.connection.channel()
 
         self.channel.queue_declare(queue='task_queue', durable=True)
@@ -50,14 +49,14 @@ class RMQHandler:
             d = request._asdict()
             post = {"params": {key: d[key] for key in d.keys()
                         & {'key', 'status'}}, "data": d['out_file']}
-            r = req.post("http://{}:{}/update-task".format(self.dbHost, self.dbPort), **post)
+            r = req.post("http://{}:{}/api/tasks/update".format(self.dbHost, self.dbhPort), **post)
             logging.info(" [x] Done")
 
 def data_handler(data):
-    logging.info(" [x] Received %r" % data)
+    logging.info("[x] Received %r" % data)
     time.sleep(10)
     return data + "output"
 
 if __name__ == "__main__":
-    node = RMQHandler("0.0.0.0", 5672, "0.0.0.0", 8070, data_handler)
+    node = RMQHandler(appPort=5672, dbhPort=8070, data_handler=data_handler)
     node.start()

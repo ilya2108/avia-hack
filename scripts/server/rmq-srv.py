@@ -8,18 +8,20 @@ import logging
 import os
 from pathlib import Path
 import json
+
 logging.basicConfig(level=logging.INFO)
+
 ROOT = Path(os.path.abspath(__file__)).parent
 WEBPAGE = ROOT/Path("webpage")
 
 class RESTApp:
-    def __init__(self, host, port, rmqHost, rmqPort, dbHost, dbPort):
-        self.host = host
-        self.port = port
-        self.rmqHost = rmqHost
+    def __init__(self, appPort, rmqPort, dbhPort):
+        self.host = "0.0.0.0"
+        self.port = appPort
+        self.rmqHost = "0.0.0.0"
         self.rmqPort = rmqPort
-        self.dbHost = dbHost
-        self.dbPort = dbPort
+        self.dbHost = "0.0.0.0"
+        self.dbhPort = dbhPort
 
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.rmqHost, port=self.rmqPort))
         self.channel = self.connection.channel()
@@ -33,7 +35,8 @@ class RESTApp:
 
     def _configure_requests(self):
         self.app.add_url_rule('/', view_func=self.index, methods=['GET'])
-        self.app.add_url_rule('/add-job', view_func=self.add, methods=['GET', 'POST'])
+        self.app.add_url_rule('/api/tasks/send', view_func=self.add, methods=['POST'])
+        self.app.add_url_rule('/api/tasks/lookup', view_func=self.check_task, methods=['GET'])
         self.app.add_url_rule("/client.js", view_func=self.javascript, methods=['GET'])
 
     def index(self):
@@ -45,7 +48,11 @@ class RESTApp:
         return content
 
     def add(self):
-        r = req.put("http://{}:{}/add-task".format(self.dbHost, self.dbPort), params={'name': "mock"})
+        try:
+            name = request.args['name']
+        except KeyError:
+            name = "default"
+        r = req.put("http://{}:{}/api/tasks/append".format(self.dbHost, self.dbhPort), params={'name': name})
         task = r.json()
         in_file = request.data.decode("utf-8")
         rmq_task = {'key': task['key'], 'in_file': in_file}
@@ -55,6 +62,11 @@ class RESTApp:
             return {'status': 'error', 'message': 'RMQ connection error %s' % e}
         else:
             return {'key': task['key'], 'status': task['status']}
+
+    def check_task(self):
+        key = request.args.get('key')
+        r = req.get("http://{}:{}/api/tasks/lookup".format(self.dbHost, self.dbhPort), params={'key': key})
+        return r.json()
 
     def _rmq_pub(self, cmd):
         self.channel.basic_publish(
@@ -66,5 +78,5 @@ class RESTApp:
             ))
 
 if __name__ == '__main__':
-    app = RESTApp("0.0.0.0", 8090, "0.0.0.0", 5672, "0.0.0.0", 8070)
+    app = RESTApp(appPort=8090, rmqPort=5672, dbhPort=8070)
     app.run()
