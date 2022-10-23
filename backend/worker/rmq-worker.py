@@ -6,7 +6,7 @@ import time
 import logging
 from collections import namedtuple
 import requests as req
-
+import model
 logging.basicConfig(level=logging.INFO)
 
 ResponseRMQ = namedtuple('ResponseRMQ', ['key', 'in_file'])
@@ -58,5 +58,6 @@ def data_handler(data):
     return data + "output"
 
 if __name__ == "__main__":
+    model.open_weights()
     node = RMQHandler(appPort=5672, dbhPort=8070, data_handler=data_handler)
     node.start()
