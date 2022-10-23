@@ -30,6 +30,8 @@ services:
     build: ../backend/db_handler
     volumes:
       - ../backend/db_handler:/scripts
+    env_file:
+      - config.env
     ports:
       - 8070:8070
     networks:
